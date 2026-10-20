@@ -1,0 +1,725 @@
+@page "/"
+@rendermode InteractiveServer
+@inject ITourDataService TourService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>TourPortal — Discover Your Next Journey</PageTitle>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-12">
+    <!-- HERO BANNER -->
+    <section class="relative rounded-3xl overflow-hidden shadow-2xl min-h-[460px] md:min-h-[500px] flex flex-col justify-between p-6 sm:p-10 md:p-14">
+        <!-- Hero Background Image with Overlay -->
+        <div class="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1800&q=85"
+                 alt="Tegallalang Bali Rice Terraces"
+                 class="w-full h-full object-cover object-center scale-105 transform hover:scale-100 transition-transform duration-1000 ease-out" />
+            <div class="absolute inset-0 bg-gradient-to-t from-stone-950/85 via-stone-900/50 to-stone-950/40"></div>
+        </div>
+
+        <!-- Hero Content Top -->
+        <div class="relative z-10 max-w-2xl space-y-3 pt-2">
+            <div class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[#FDF2EC]">
+                <span class="w-5 h-[1.5px] bg-[#B55B3A] inline-block"></span>
+                <span>The World, A Little Closer</span>
+            </div>
+            <h1 class="text-4xl sm:text-5xl md:text-6xl font-normal text-white font-serif tracking-tight leading-[1.12]">
+                Discover Your Next Journey
+            </h1>
+            <p class="text-stone-200 text-sm sm:text-base font-light max-w-xl leading-relaxed pt-1">
+                Extraordinary places. Thoughtful local guides. A story worth bringing home.
+            </p>
+        </div>
+
+        <!-- Hero Search Widget & Trust Badges -->
+        <div class="relative z-20 space-y-5 pt-8">
+            <!-- Floating White Search Card -->
+            <div class="bg-white rounded-2xl p-2.5 sm:p-3 shadow-2xl border border-white/70 max-w-4xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2 relative">
+                <!-- Where to (Interactive with Suggestions) -->
+                <div class="flex-1 px-4 py-2 hover:bg-stone-50 rounded-xl transition-colors cursor-pointer group relative">
+                    <div class="flex items-center gap-2 text-xs font-bold text-stone-800">
+                        <svg class="w-3.5 h-3.5 text-[#B55B3A] stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                        </svg>
+                        <span>Where to?</span>
+                    </div>
+                    <input type="text"
+                           @bind="_searchDestination"
+                           @bind:event="oninput"
+                           @onfocus="() => _showDestinationMenu = true"
+                           placeholder="Destinations, experiences, possibilities"
+                           class="w-full text-xs text-stone-700 font-medium bg-transparent border-none p-0 focus:outline-none focus:ring-0 truncate" />
+
+                    @if (_showDestinationMenu)
+                    {
+                        <div class="absolute left-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-stone-200 py-2 z-50 animate-in fade-in slide-in-from-top-1">
+                            <div class="px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-stone-400">Popular Destinations</div>
+                            @foreach (var place in _popularDestinations)
+                            {
+                                <button type="button"
+                                        @onclick="() => SelectDestination(place)"
+                                        class="w-full text-left px-3.5 py-2 text-xs font-medium text-stone-700 hover:bg-[#FAF4EE] hover:text-[#B55B3A] flex items-center justify-between transition-colors">
+                                    <span>@place</span>
+                                    <span class="text-[10px] text-[#B55B3A] font-semibold">Select</span>
+                                </button>
+                            }
+                            <div class="border-t border-stone-100 mt-1 pt-1 px-3">
+                                <button type="button"
+                                        @onclick="() => _showDestinationMenu = false"
+                                        class="text-[11px] text-stone-400 hover:text-stone-600">Close</button>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="hidden md:block w-px h-9 bg-stone-200"></div>
+
+                <!-- When (Interactive Date Selector Popover) -->
+                <div class="px-4 py-2 hover:bg-stone-50 rounded-xl transition-colors cursor-pointer min-w-[170px] relative"
+                     @onclick="ToggleDateMenu">
+                    <div class="flex items-center gap-1.5 text-xs font-bold text-stone-800">
+                        <svg class="w-3.5 h-3.5 text-[#B55B3A] stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                            <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                            <line x1="16" x2="16" y1="2" y2="6" />
+                            <line x1="8" x2="8" y1="2" y2="6" />
+                            <line x1="3" x2="21" y1="10" y2="10" />
+                        </svg>
+                        <span>When</span>
+                    </div>
+                    <div class="text-xs text-stone-700 font-semibold flex items-center justify-between gap-1">
+                        <span>@_heroTravelDates</span>
+                        <svg class="w-3 h-3 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+
+                    @if (_showDateMenu)
+                    {
+                        <div class="absolute left-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-stone-200 py-2 z-50 animate-in fade-in slide-in-from-top-1"
+                             @onclick:stopPropagation="true">
+                            <div class="px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-stone-400">Available Departures</div>
+                            @foreach (var date in _availableDateOptions)
+                            {
+                                <button type="button"
+                                        @onclick="() => SelectDate(date)"
+                                        class="w-full text-left px-3.5 py-2 text-xs font-medium text-stone-700 hover:bg-[#FAF4EE] hover:text-[#B55B3A] flex items-center justify-between transition-colors @(_heroTravelDates == date ? "text-[#B55B3A] font-bold bg-[#FDF2EC]" : "")">
+                                    <span>@date</span>
+                                    @if (_heroTravelDates == date)
+                                    {
+                                        <svg class="w-3.5 h-3.5 text-[#B55B3A] stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                        </svg>
+                                    }
+                                </button>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="hidden md:block w-px h-9 bg-stone-200"></div>
+
+                <!-- Who's coming (Interactive Guest Stepper Popover) -->
+                <div class="px-4 py-2 hover:bg-stone-50 rounded-xl transition-colors cursor-pointer min-w-[150px] relative"
+                     @onclick="ToggleGuestMenu">
+                    <div class="flex items-center gap-1.5 text-xs font-bold text-stone-800">
+                        <svg class="w-3.5 h-3.5 text-[#B55B3A] stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                        </svg>
+                        <span>Who's coming?</span>
+                    </div>
+                    <div class="text-xs text-stone-700 font-semibold flex items-center justify-between gap-1">
+                        <span>@_heroGuests @(_heroGuests == 1 ? "guest" : "guests")</span>
+                        <svg class="w-3 h-3 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+
+                    @if (_showGuestMenu)
+                    {
+                        <div class="absolute left-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-2xl border border-stone-200 p-4 z-50 animate-in fade-in slide-in-from-top-1"
+                             @onclick:stopPropagation="true">
+                            <div class="text-xs font-bold text-stone-900 mb-0.5">Travelers</div>
+                            <div class="text-[11px] text-stone-400 mb-3">Adults (ages 12+)</div>
+                            <div class="flex items-center justify-between">
+                                <button type="button"
+                                        @onclick="DecrementHeroGuests"
+                                        disabled="@(_heroGuests <= 1)"
+                                        class="w-8 h-8 rounded-lg border border-stone-200 flex items-center justify-center font-bold text-stone-700 hover:bg-stone-100 disabled:opacity-30">
+                                    –
+                                </button>
+                                <span class="text-sm font-bold text-stone-900">@_heroGuests</span>
+                                <button type="button"
+                                        @onclick="IncrementHeroGuests"
+                                        disabled="@(_heroGuests >= 8)"
+                                        class="w-8 h-8 rounded-lg border border-stone-200 flex items-center justify-center font-bold text-stone-700 hover:bg-stone-100 disabled:opacity-30">
+                                    +
+                                </button>
+                            </div>
+                            <button type="button"
+                                    @onclick="() => _showGuestMenu = false"
+                                    class="w-full mt-3 bg-[#3E3430] text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-[#322A26]">
+                                Done
+                            </button>
+                        </div>
+                    }
+                </div>
+
+                <!-- Explore Tours CTA Button (Warm Espresso Color matching mockup) -->
+                <button type="button"
+                        @onclick="HandleHeroExplore"
+                        class="bg-[#3E3430] hover:bg-[#322A26] text-white font-semibold text-xs sm:text-sm px-6 py-3.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 group active:scale-95 cursor-pointer">
+                    <span>Explore tours</span>
+                    <svg class="w-4 h-4 stroke-current fill-none group-hover:translate-x-0.5 transition-transform" viewBox="0 0 24 24" stroke-width="2.5">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Trust Badges -->
+            <div class="flex items-center gap-8 text-xs text-stone-200 font-medium pt-1">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-[#FDF2EC] stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                    </svg>
+                    <span>Book as a guest</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-[#FDF2EC] stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                    </svg>
+                    <span>Instant digital tour pass</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FILTER PILLS ROW -->
+    <section class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-2">
+        <div class="flex items-center flex-wrap gap-2.5">
+            <span class="text-sm font-semibold text-stone-700 mr-2">Find your kind of escape</span>
+
+            <!-- Category Pills with Obvious Active / Toggle State -->
+            <button type="button"
+                    @onclick='() => ToggleCategory("Nature")'
+                    class="@GetFilterPillClass("Nature")">
+                <svg class="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                </svg>
+                <span>Nature</span>
+            </button>
+
+            <button type="button"
+                    @onclick='() => ToggleCategory("Culture")'
+                    class="@GetFilterPillClass("Culture")">
+                <svg class="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.5M4.5 21V10.5M3 21h18M3 9h18" />
+                </svg>
+                <span>Culture</span>
+            </button>
+
+            <button type="button"
+                    @onclick='() => ToggleCategory("Beach")'
+                    class="@GetFilterPillClass("Beach")">
+                <svg class="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                </svg>
+                <span>Beach</span>
+            </button>
+
+            <button type="button"
+                    @onclick='() => ToggleCategory("Eco")'
+                    class="@GetFilterPillClass("Eco")">
+                <svg class="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.383a14.406 14.406 0 0 1-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 1 0-7.516 0c.85.493 1.508 1.333 1.508 2.316V18" />
+                </svg>
+                <span>Eco</span>
+            </button>
+
+            @if (!string.IsNullOrWhiteSpace(_selectedCategory) || !string.IsNullOrWhiteSpace(_searchDestination) || _maxPriceFilter < 500)
+            {
+                <button type="button"
+                        @onclick="ResetAllFilters"
+                        class="text-xs text-[#B55B3A] hover:text-[#96472A] font-semibold underline ml-2 cursor-pointer">
+                    Clear all filters
+                </button>
+            }
+        </div>
+
+        <!-- All Filters Trigger (Opens Interactive Filter Drawer) -->
+        <button type="button"
+                @onclick="() => _showFilterDrawer = true"
+                class="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-700 bg-white border border-stone-200 hover:bg-stone-50 px-3.5 py-2 rounded-full transition-colors shadow-sm active:scale-95 cursor-pointer">
+            <svg class="w-3.5 h-3.5 text-[#B55B3A] stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+            </svg>
+            <span>All filters @(_activeFilterCount > 0 ? $"({_activeFilterCount})" : "")</span>
+        </button>
+    </section>
+
+    <!-- SECTION HEADING & TOUR CARDS GRID -->
+    <section id="tours-section" class="space-y-6 scroll-mt-28">
+        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-2 border-b border-stone-200/80 pb-4">
+            <div>
+                <p class="text-xs font-bold text-[#B55B3A] tracking-wider uppercase">Curated For The Curious</p>
+                <h2 class="text-3xl font-medium text-stone-900 font-serif tracking-tight mt-1">
+                    Small groups. Extraordinary places.
+                </h2>
+                @if (!string.IsNullOrWhiteSpace(_selectedCategory) || !string.IsNullOrWhiteSpace(_searchDestination))
+                {
+                    <div class="text-xs text-stone-500 mt-1">
+                        Showing results for <span class="font-bold text-stone-800">@(_selectedCategory ?? _searchDestination)</span>
+                    </div>
+                }
+            </div>
+
+            <!-- Sort By Dropdown -->
+            <div class="flex items-center gap-2 text-xs text-stone-500">
+                <span>Sort by:</span>
+                <select @bind="_sortBy"
+                        @bind:after="StateHasChanged"
+                        class="bg-white border border-stone-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-stone-800 focus:ring-1 focus:ring-[#B55B3A] cursor-pointer shadow-sm">
+                    <option value="recommended">Recommended</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="rating">Top Rated</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 4-Column Tour Cards Grid -->
+        @{
+            var filteredList = GetFilteredTours().ToList();
+        }
+
+        @if (!filteredList.Any())
+        {
+            <div class="bg-white rounded-2xl border border-stone-200 p-12 text-center space-y-3">
+                <div class="text-3xl">🌿</div>
+                <h3 class="text-lg font-bold text-stone-900">No matching tours found</h3>
+                <p class="text-xs text-stone-500 max-w-sm mx-auto">Try adjusting your filters or destination search term to explore available journeys.</p>
+                <button type="button"
+                        @onclick="ResetAllFilters"
+                        class="bg-[#3E3430] text-white text-xs font-semibold px-4 py-2 rounded-xl hover:bg-[#322A26] transition">
+                    Show all tours
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                @foreach (var tour in filteredList)
+                {
+                    <div class="bg-white rounded-2xl overflow-hidden border border-stone-200/80 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col group">
+                        <!-- Card Image with Badges -->
+                        <div class="relative aspect-[4/3] w-full overflow-hidden bg-stone-100">
+                            <img src="@tour.ImageUrl"
+                                 alt="@tour.Title"
+                                 class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out" />
+
+                            <!-- Category Pill (Top Left) -->
+                            <span class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-stone-800 text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-sm">
+                                @tour.Category
+                            </span>
+
+                            <!-- Favorite Heart (Top Right - Interactive) -->
+                            <button type="button"
+                                    @onclick="() => ToggleFavorite(tour.Id)"
+                                    class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-stone-600 hover:text-red-500 shadow-sm transition-transform active:scale-90 cursor-pointer">
+                                <svg class="w-4 h-4 @(_favorites.Contains(tour.Id) ? "fill-red-500 text-red-500" : "fill-none stroke-current")" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="p-4 flex-1 flex flex-col justify-between space-y-4">
+                            <div class="space-y-1.5">
+                                <!-- Location & Rating Row -->
+                                <div class="flex items-center justify-between text-xs text-stone-500">
+                                    <span class="flex items-center gap-1 font-medium truncate">
+                                        <svg class="w-3.5 h-3.5 text-[#B55B3A] stroke-current fill-none shrink-0" viewBox="0 0 24 24" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                                        </svg>
+                                        @tour.Location
+                                    </span>
+                                    <span class="flex items-center gap-1 font-semibold text-stone-800">
+                                        <svg class="w-3.5 h-3.5 text-amber-500 fill-amber-500" viewBox="0 0 24 24">
+                                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                        </svg>
+                                        @tour.Rating.ToString("0.00")
+                                    </span>
+                                </div>
+
+                                <!-- Tour Title -->
+                                <h3 class="font-bold text-stone-900 text-base leading-snug group-hover:text-[#B55B3A] transition-colors">
+                                    @tour.Title
+                                </h3>
+
+                                <!-- Meta details -->
+                                <p class="text-xs text-stone-500 font-normal">
+                                    @tour.Duration
+                                </p>
+                            </div>
+
+                            <!-- Price & CTA Button Row (Warm Espresso button matching new design) -->
+                            <div class="pt-3 border-t border-stone-100 flex items-center justify-between gap-2">
+                                <div>
+                                    <span class="text-xl font-bold text-stone-900">$@tour.Price</span>
+                                    <span class="text-xs text-stone-500 font-normal"> / person</span>
+                                </div>
+
+                                <a href="/tours/@tour.Id"
+                                   class="bg-[#3E3430] hover:bg-[#322A26] text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all shadow-sm active:scale-95 text-decoration-none">
+                                    View Tour
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    <!-- TOP RATED DESTINATIONS ROW (Warm Sand Cards matching new design) -->
+    <section class="space-y-6 pt-6">
+        <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-medium text-stone-900 font-serif tracking-tight">
+                Top Rated Destinations
+            </h2>
+            <button type="button"
+                    @onclick="ResetAllFilters"
+                    class="text-xs font-semibold text-[#B55B3A] hover:text-[#96472A] flex items-center gap-1 group cursor-pointer">
+                <span>Explore all destinations</span>
+                <span class="group-hover:translate-x-0.5 transition-transform">→</span>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Destination 1: Bali -->
+            <div @onclick='() => FilterByDestination("Bali")'
+                 class="bg-[#F8F2EA] rounded-2xl p-3 border border-[#EFE4D8] hover:border-[#B55B3A]/60 hover:shadow-md transition-all flex items-center gap-3.5 cursor-pointer group active:scale-98">
+                <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=300&q=80"
+                     alt="Bali"
+                     class="w-14 h-14 rounded-xl object-cover group-hover:scale-105 transition-transform" />
+                <div class="space-y-0.5">
+                    <h4 class="font-bold text-stone-900 text-sm group-hover:text-[#B55B3A] transition-colors">Bali, Indonesia</h4>
+                    <p class="text-xs text-stone-500">28 experiences · 4.98 ★</p>
+                </div>
+            </div>
+
+            <!-- Destination 2: Kyoto -->
+            <div @onclick='() => FilterByDestination("Kyoto")'
+                 class="bg-[#F8F2EA] rounded-2xl p-3 border border-[#EFE4D8] hover:border-[#B55B3A]/60 hover:shadow-md transition-all flex items-center gap-3.5 cursor-pointer group active:scale-98">
+                <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=300&q=80"
+                     alt="Kyoto"
+                     class="w-14 h-14 rounded-xl object-cover group-hover:scale-105 transition-transform" />
+                <div class="space-y-0.5">
+                    <h4 class="font-bold text-stone-900 text-sm group-hover:text-[#B55B3A] transition-colors">Kyoto, Japan</h4>
+                    <p class="text-xs text-stone-500">19 experiences · 4.96 ★</p>
+                </div>
+            </div>
+
+            <!-- Destination 3: Nusa Penida -->
+            <div @onclick='() => FilterByDestination("Penida")'
+                 class="bg-[#F8F2EA] rounded-2xl p-3 border border-[#EFE4D8] hover:border-[#B55B3A]/60 hover:shadow-md transition-all flex items-center gap-3.5 cursor-pointer group active:scale-98">
+                <img src="https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=300&q=80"
+                     alt="Nusa Penida"
+                     class="w-14 h-14 rounded-xl object-cover group-hover:scale-105 transition-transform" />
+                <div class="space-y-0.5">
+                    <h4 class="font-bold text-stone-900 text-sm group-hover:text-[#B55B3A] transition-colors">Nusa Penida, Indonesia</h4>
+                    <p class="text-xs text-stone-500">12 experiences · 4.94 ★</p>
+                </div>
+            </div>
+
+            <!-- Destination 4: Dolomites -->
+            <div @onclick='() => FilterByDestination("Dolomites")'
+                 class="bg-[#F8F2EA] rounded-2xl p-3 border border-[#EFE4D8] hover:border-[#B55B3A]/60 hover:shadow-md transition-all flex items-center gap-3.5 cursor-pointer group active:scale-98">
+                <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=300&q=80"
+                     alt="Dolomites"
+                     class="w-14 h-14 rounded-xl object-cover group-hover:scale-105 transition-transform" />
+                <div class="space-y-0.5">
+                    <h4 class="font-bold text-stone-900 text-sm group-hover:text-[#B55B3A] transition-colors">Dolomites, Italy</h4>
+                    <p class="text-xs text-stone-500">16 experiences · 4.97 ★</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ALL FILTERS MODAL DRAWER -->
+@if (_showFilterDrawer)
+{
+    <div class="fixed inset-0 z-50 overflow-hidden bg-stone-900/60 backdrop-blur-sm flex justify-end animate-in fade-in duration-200">
+        <div class="w-full max-w-md bg-white h-full shadow-2xl p-6 flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-300">
+            <div class="space-y-6">
+                <!-- Drawer Header -->
+                <div class="flex items-center justify-between border-b border-stone-200 pb-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-stone-900">Filters</h3>
+                        <p class="text-xs text-stone-500">Refine destination experiences</p>
+                    </div>
+                    <button type="button"
+                            @onclick="() => _showFilterDrawer = false"
+                            class="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-600 transition">
+                        ✕
+                    </button>
+                </div>
+
+                <!-- Price Range Filter -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between text-xs font-bold text-stone-800">
+                        <span>Max Price per person</span>
+                        <span class="text-[#B55B3A] font-bold">$@_maxPriceFilter</span>
+                    </div>
+                    <input type="range"
+                           min="80"
+                           max="400"
+                           step="10"
+                           @bind="_maxPriceFilter"
+                           @bind:event="oninput"
+                           class="w-full accent-[#B55B3A] cursor-pointer" />
+                    <div class="flex justify-between text-[11px] text-stone-400">
+                        <span>$80</span>
+                        <span>$400+</span>
+                    </div>
+                </div>
+
+                <!-- Categories Checkboxes -->
+                <div class="space-y-2">
+                    <span class="text-xs font-bold text-stone-800 block">Category</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        @foreach (var cat in new[] { "Nature", "Culture", "Beach", "Eco" })
+                        {
+                            <button type="button"
+                                    @onclick="() => ToggleCategory(cat)"
+                                    class="px-3 py-2 rounded-xl border text-xs font-semibold text-left transition @(_selectedCategory == cat ? "border-[#B55B3A] bg-[#FDF2EC] text-[#B55B3A]" : "border-stone-200 text-stone-700 hover:bg-stone-50")">
+                                @cat
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <!-- Minimum Rating Filter -->
+                <div class="space-y-2">
+                    <span class="text-xs font-bold text-stone-800 block">Rating</span>
+                    <div class="flex gap-2">
+                        @foreach (var minR in new[] { (Label: "All", Value: 0.0), (Label: "4.9+ ★", Value: 4.9), (Label: "4.95+ ★", Value: 4.95) })
+                        {
+                            <button type="button"
+                                    @onclick="() => _minRatingFilter = minR.Value"
+                                    class="flex-1 py-1.5 rounded-xl border text-xs font-semibold text-center transition @(_minRatingFilter == minR.Value ? "border-[#B55B3A] bg-[#FDF2EC] text-[#B55B3A]" : "border-stone-200 text-stone-700 hover:bg-stone-50")">
+                                @minR.Label
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drawer Bottom Buttons -->
+            <div class="pt-6 border-t border-stone-200 flex gap-3">
+                <button type="button"
+                        @onclick="ResetAllFilters"
+                        class="flex-1 border border-stone-200 hover:bg-stone-100 text-stone-700 text-xs font-semibold py-3 rounded-xl transition">
+                    Reset
+                </button>
+                <button type="button"
+                        @onclick="() => _showFilterDrawer = false"
+                        class="flex-1 bg-[#3E3430] hover:bg-[#322A26] text-white text-xs font-semibold py-3 rounded-xl transition shadow">
+                    Apply Filters
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [SupplyParameterFromQuery(Name = "search")]
+    public string? SearchQuery { get; set; }
+
+    private string? _selectedCategory;
+    private string _searchDestination = string.Empty;
+    private string _sortBy = "recommended";
+    private int _heroGuests = 2;
+    private string _heroTravelDates = "12–14 Jun 2027";
+    private HashSet<string> _favorites = new();
+
+    private bool _showDestinationMenu = false;
+    private bool _showDateMenu = false;
+    private bool _showGuestMenu = false;
+    private bool _showFilterDrawer = false;
+
+    private int _maxPriceFilter = 500;
+    private double _minRatingFilter = 0.0;
+
+    private int _activeFilterCount =>
+        (!string.IsNullOrWhiteSpace(_selectedCategory) ? 1 : 0) +
+        (_maxPriceFilter < 500 ? 1 : 0) +
+        (_minRatingFilter > 0 ? 1 : 0);
+
+    private readonly string[] _popularDestinations = new[]
+    {
+        "Bali, Indonesia",
+        "Kyoto, Japan",
+        "Nusa Penida, Bali",
+        "Dolomites, Italy"
+    };
+
+    private readonly string[] _availableDateOptions = new[]
+    {
+        "12–14 Jun 2027",
+        "19–21 Jun 2027",
+        "26–28 Jun 2027",
+        "3–5 Jul 2027"
+    };
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrWhiteSpace(SearchQuery))
+        {
+            _searchDestination = SearchQuery;
+        }
+    }
+
+    private void ToggleDateMenu()
+    {
+        _showDateMenu = !_showDateMenu;
+        _showGuestMenu = false;
+        _showDestinationMenu = false;
+    }
+
+    private void ToggleGuestMenu()
+    {
+        _showGuestMenu = !_showGuestMenu;
+        _showDateMenu = false;
+        _showDestinationMenu = false;
+    }
+
+    private void SelectDate(string date)
+    {
+        _heroTravelDates = date;
+        _showDateMenu = false;
+        StateHasChanged();
+    }
+
+    private void SelectDestination(string destination)
+    {
+        _searchDestination = destination;
+        _showDestinationMenu = false;
+        StateHasChanged();
+    }
+
+    private void IncrementHeroGuests()
+    {
+        if (_heroGuests < 8) _heroGuests++;
+    }
+
+    private void DecrementHeroGuests()
+    {
+        if (_heroGuests > 1) _heroGuests--;
+    }
+
+    private void ToggleCategory(string category)
+    {
+        if (_selectedCategory == category)
+            _selectedCategory = null;
+        else
+            _selectedCategory = category;
+
+        StateHasChanged();
+    }
+
+    private void ResetAllFilters()
+    {
+        _selectedCategory = null;
+        _searchDestination = string.Empty;
+        _maxPriceFilter = 500;
+        _minRatingFilter = 0.0;
+        _showFilterDrawer = false;
+        StateHasChanged();
+    }
+
+    private async Task FilterByDestination(string keyword)
+    {
+        _searchDestination = keyword;
+        StateHasChanged();
+        await ScrollToToursSection();
+    }
+
+    private void ToggleFavorite(string tourId)
+    {
+        if (_favorites.Contains(tourId))
+            _favorites.Remove(tourId);
+        else
+            _favorites.Add(tourId);
+
+        StateHasChanged();
+    }
+
+    private async Task HandleHeroExplore()
+    {
+        _showDateMenu = false;
+        _showGuestMenu = false;
+        _showDestinationMenu = false;
+        StateHasChanged();
+        await ScrollToToursSection();
+    }
+
+    private async Task ScrollToToursSection()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('tours-section')?.scrollIntoView({ behavior: 'smooth' })");
+        }
+        catch
+        {
+            // Fallback
+        }
+    }
+
+    private string GetFilterPillClass(string category)
+    {
+        var isSelected = string.Equals(_selectedCategory, category, StringComparison.OrdinalIgnoreCase);
+        return isSelected
+            ? "inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-[#B55B3A] border border-[#B55B3A] px-3.5 py-2 rounded-full transition-all shadow-md active:scale-95 cursor-pointer ring-2 ring-[#B55B3A]/30"
+            : "inline-flex items-center gap-1.5 text-xs font-medium text-stone-700 bg-white border border-stone-200/90 hover:bg-stone-50 px-3.5 py-2 rounded-full transition-colors shadow-sm active:scale-95 cursor-pointer";
+    }
+
+    private IEnumerable<Tour> GetFilteredTours()
+    {
+        var tours = TourService.GetAllTours().AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(_selectedCategory))
+        {
+            tours = tours.Where(t => string.Equals(t.Category, _selectedCategory, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(_searchDestination))
+        {
+            tours = tours.Where(t =>
+                t.Location.Contains(_searchDestination, StringComparison.OrdinalIgnoreCase) ||
+                t.Country.Contains(_searchDestination, StringComparison.OrdinalIgnoreCase) ||
+                t.Title.Contains(_searchDestination, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (_maxPriceFilter < 500)
+        {
+            tours = tours.Where(t => t.Price <= _maxPriceFilter);
+        }
+
+        if (_minRatingFilter > 0)
+        {
+            tours = tours.Where(t => t.Rating >= _minRatingFilter);
+        }
+
+        return _sortBy switch
+        {
+            "price-low" => tours.OrderBy(t => t.Price),
+            "price-high" => tours.OrderByDescending(t => t.Price),
+            "rating" => tours.OrderByDescending(t => t.Rating),
+            _ => tours
+        };
+    }
+}
