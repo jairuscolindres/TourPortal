@@ -1,0 +1,388 @@
+@page "/booking/pass"
+@rendermode InteractiveServer
+@inject BookingStateService BookingState
+@inject ITourDataService TourService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Booking Pass — @Booking.LeadTravelerName</PageTitle>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+    <!-- TOP CONFIRMATION BANNER -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-2">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-[#FDF2EC] border border-[#F6D7C9] text-[#B55B3A] flex items-center justify-center shrink-0 shadow-sm">
+                <svg class="w-6 h-6 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-normal text-stone-900 font-serif tracking-tight">
+                    All set, @(string.IsNullOrWhiteSpace(Booking.LeadTravelerName) ? "Traveler" : Booking.LeadTravelerName.Split(' ')[0]). Let the journey begin.
+                </h1>
+                <p class="text-xs sm:text-sm text-stone-500 mt-0.5">
+                    Your tour pass has been sent to <span class="font-medium text-stone-700">@Booking.Email</span>
+                </p>
+            </div>
+        </div>
+
+        <a href="/" class="inline-flex items-center gap-1.5 text-xs font-semibold text-[#B55B3A] hover:text-[#96472A] transition-colors group">
+            <span class="group-hover:-translate-x-0.5 transition-transform">←</span>
+            <span>Back to explore</span>
+        </a>
+    </div>
+
+    <!-- SUMMARY OVERVIEW CARD -->
+    <section class="bg-white rounded-3xl border border-stone-200 p-6 sm:p-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="space-y-6 flex-1 w-full">
+            <div class="flex items-center gap-3 flex-wrap">
+                <h2 class="text-3xl font-medium text-stone-900 font-serif tracking-tight">
+                    @Booking.TourTitle
+                </h2>
+                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#B55B3A] bg-[#FDF2EC] border border-[#F6D7C9] px-2.5 py-1 rounded-full">
+                    <svg class="w-3 h-3 text-[#B55B3A] stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                    </svg>
+                    <span>Booking confirmed</span>
+                </span>
+            </div>
+
+            <!-- 4 Metadata Columns -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-2">
+                <div>
+                    <span class="block text-[10px] font-bold tracking-wider uppercase text-stone-400 mb-1">Lead Traveler</span>
+                    <span class="text-sm font-bold text-stone-900 truncate block">@Booking.LeadTravelerName</span>
+                </div>
+
+                <div>
+                    <span class="block text-[10px] font-bold tracking-wider uppercase text-stone-400 mb-1">Travel Dates</span>
+                    <span class="text-sm font-bold text-stone-900 block">@Booking.TravelDates</span>
+                </div>
+
+                <div>
+                    <span class="block text-[10px] font-bold tracking-wider uppercase text-stone-400 mb-1">Guests</span>
+                    <span class="text-sm font-bold text-stone-900 block">@Booking.GuestCount adults</span>
+                </div>
+
+                <div>
+                    <span class="block text-[10px] font-bold tracking-wider uppercase text-stone-400 mb-1">Total Paid</span>
+                    <span class="text-sm font-bold text-stone-900 block">$@Booking.TotalPaid USD</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thumbnail Photo -->
+        <div class="w-full md:w-80 h-44 rounded-2xl overflow-hidden bg-stone-100 shrink-0 shadow-inner">
+            <img src="@Booking.TourImageUrl"
+                 alt="@Booking.TourTitle"
+                 class="w-full h-full object-cover object-center" />
+        </div>
+    </section>
+
+    <!-- SPLIT LAYOUT: DIGITAL TOUR PASS (50%) & ITINERARY TIMELINE (50%) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+        <!-- LEFT COLUMN: DIGITAL TOUR PASS CARD -->
+        <div class="space-y-6">
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-medium text-stone-900 font-serif tracking-tight">
+                    Your ticket to a little wonder.
+                </h2>
+                <div class="w-8 h-8 rounded-full bg-[#FDF2EC] text-[#B55B3A] flex items-center justify-center">
+                    <svg class="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- TICKET CARD -->
+            <div class="relative bg-white rounded-3xl border border-stone-200 shadow-lg shadow-stone-200/60 overflow-hidden">
+                <!-- Dark Espresso Card Header -->
+                <div class="bg-[#3E3430] p-6 text-white flex items-center justify-between">
+                    <div>
+                        <div class="text-[10px] font-bold tracking-widest uppercase text-stone-300">
+                            TourPortal / Digital Tour Pass
+                        </div>
+                        <h3 class="text-2xl font-normal font-serif text-white mt-1">
+                            @Booking.TourTitle
+                        </h3>
+                    </div>
+                    <div class="text-stone-400 opacity-80">
+                        <svg class="w-7 h-7 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="1.8">
+                            <rect width="18" height="12" x="3" y="6" rx="2" />
+                            <path d="M9 6v12" />
+                            <path d="M15 6v12" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Pass Details Row -->
+                <div class="p-6 grid grid-cols-3 gap-4 border-b border-stone-100 bg-white">
+                    <div>
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-0.5">Lead Traveler</span>
+                        <span class="text-xs sm:text-sm font-bold text-stone-900 block truncate">@Booking.LeadTravelerName</span>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-0.5">Guests</span>
+                        <span class="text-xs sm:text-sm font-bold text-stone-900 block">@Booking.GuestCount adults</span>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-0.5">Travel Dates</span>
+                        <span class="text-xs sm:text-sm font-bold text-stone-900 block">@Booking.TravelDates</span>
+                    </div>
+                </div>
+
+                <!-- Perforation Cutouts with Dashed Line -->
+                <div class="relative py-2 flex items-center justify-between">
+                    <div class="w-6 h-6 rounded-full bg-[#FAF8F5] border-r border-stone-200 -ml-3"></div>
+                    <div class="flex-1 border-t-2 border-dashed border-stone-200 mx-2"></div>
+                    <div class="w-6 h-6 rounded-full bg-[#FAF8F5] border-l border-stone-200 -mr-3"></div>
+                </div>
+
+                <!-- QR Code & Booking Ref Body -->
+                <div class="p-6 pt-2 text-center space-y-4">
+                    <div>
+                        <div class="text-[10px] font-bold tracking-widest uppercase text-stone-400">
+                            Your Booking Reference
+                        </div>
+                        <div class="text-2xl font-bold font-mono text-stone-900 tracking-tight mt-0.5">
+                            Ref: #@Booking.ReferenceCode
+                        </div>
+                    </div>
+
+                    <!-- Clean SVG QR Code Matrix -->
+                    <div class="flex flex-col items-center justify-center pt-1">
+                        <div class="p-4 bg-white border border-stone-200 rounded-2xl shadow-inner inline-block">
+                            <svg class="w-44 h-44 text-stone-900" viewBox="0 0 100 100" fill="currentColor">
+                                <!-- Top-Left Target -->
+                                <rect x="5" y="5" width="30" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="5" />
+                                <rect x="13" y="13" width="14" height="14" rx="2" />
+
+                                <!-- Top-Right Target -->
+                                <rect x="65" y="5" width="30" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="5" />
+                                <rect x="73" y="13" width="14" height="14" rx="2" />
+
+                                <!-- Bottom-Left Target -->
+                                <rect x="5" y="65" width="30" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="5" />
+                                <rect x="13" y="73" width="14" height="14" rx="2" />
+
+                                <!-- QR Matrix Pattern Modules -->
+                                <rect x="42" y="8" width="6" height="6" />
+                                <rect x="50" y="8" width="6" height="6" />
+                                <rect x="42" y="18" width="6" height="6" />
+                                <rect x="52" y="24" width="6" height="6" />
+                                <rect x="42" y="32" width="6" height="6" />
+                                <rect x="10" y="42" width="6" height="6" />
+                                <rect x="22" y="42" width="6" height="6" />
+                                <rect x="32" y="42" width="6" height="6" />
+                                <rect x="44" y="42" width="6" height="6" />
+                                <rect x="54" y="42" width="6" height="6" />
+                                <rect x="68" y="42" width="6" height="6" />
+                                <rect x="78" y="42" width="6" height="6" />
+                                <rect x="88" y="42" width="6" height="6" />
+                                <rect x="8" y="52" width="6" height="6" />
+                                <rect x="24" y="52" width="6" height="6" />
+                                <rect x="36" y="52" width="6" height="6" />
+                                <rect x="48" y="52" width="6" height="6" />
+                                <rect x="60" y="52" width="6" height="6" />
+                                <rect x="76" y="52" width="6" height="6" />
+                                <rect x="84" y="52" width="6" height="6" />
+                                <rect x="42" y="64" width="6" height="6" />
+                                <rect x="54" y="64" width="6" height="6" />
+                                <rect x="68" y="64" width="6" height="6" />
+                                <rect x="82" y="64" width="6" height="6" />
+                                <rect x="42" y="76" width="6" height="6" />
+                                <rect x="52" y="84" width="6" height="6" />
+                                <rect x="64" y="76" width="6" height="6" />
+                                <rect x="74" y="86" width="6" height="6" />
+                                <rect x="86" y="76" width="6" height="6" />
+                            </svg>
+                        </div>
+                        <span class="text-[11px] text-stone-400 mt-2">QR placeholder · Preview only</span>
+                    </div>
+
+                    <p class="text-xs text-stone-700 font-medium pt-1">
+                        Show this code to your tour guide upon arrival
+                    </p>
+
+                    <!-- Print CTA Button (Warm Terracotta color matching new design) -->
+                    <div class="pt-2">
+                        <button type="button"
+                                @onclick="PrintPass"
+                                class="w-full bg-[#B55B3A] hover:bg-[#A24E30] text-white font-semibold text-sm py-3.5 px-4 rounded-xl shadow-md shadow-[#B55B3A]/20 flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer">
+                            <span>Print / Download PDF</span>
+                            <svg class="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                            </svg>
+                        </button>
+                        <p class="text-[11px] text-stone-400 text-center mt-2">
+                            Save your pass for easy offline access.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Warm Sand Callout Box (Matches new design) -->
+            <div class="bg-[#FAF4EE] border border-[#EFE4D8] rounded-2xl p-4 flex items-start gap-3">
+                <div class="w-8 h-8 rounded-full bg-[#FDF2EC] text-[#B55B3A] flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                        <rect width="20" height="16" x="2" y="4" rx="2" />
+                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                    </svg>
+                </div>
+                <div class="space-y-0.5">
+                    <h4 class="text-xs font-bold text-stone-900">Your trip, without the login.</h4>
+                    <p class="text-xs text-stone-600 leading-relaxed">
+                        Keep your confirmation email or use your booking reference and email in My Booking Pass to find this again.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: ITINERARY TIMELINE -->
+        <div class="space-y-6">
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-medium text-stone-900 font-serif tracking-tight">
+                    Your journey, day by day.
+                </h2>
+                <span class="text-xs text-stone-400">All times WITA (UTC+8)</span>
+            </div>
+
+            <!-- Day Selector Tabs (Warm Terracotta Active Tab) -->
+            <div class="grid grid-cols-3 gap-2 p-1 bg-stone-100 rounded-2xl">
+                @foreach (var day in CurrentTour.ItineraryDays)
+                {
+                    var isSelected = _selectedDayNumber == day.DayNumber;
+                    <button type="button"
+                            @onclick="() => SelectDay(day.DayNumber)"
+                            class="py-2.5 px-3 rounded-xl text-center transition-all cursor-pointer @(isSelected ? "bg-[#B55B3A] text-white shadow-sm font-semibold" : "text-stone-600 hover:text-stone-900 font-medium")">
+                        <div class="text-xs">Day @day.DayNumber</div>
+                        <div class="text-[11px] @(isSelected ? "text-[#FDF2EC]" : "text-stone-400")">@day.DateLabel</div>
+                    </button>
+                }
+            </div>
+
+            <!-- Active Day Title & Date -->
+            <div class="pt-1">
+                <h3 class="text-base font-bold text-stone-900">
+                    @(ActiveDay?.Title ?? "Daily Itinerary")
+                </h3>
+                <p class="text-xs text-stone-500">
+                    @(ActiveDay?.FullDateLabel ?? "")
+                </p>
+            </div>
+
+            <!-- Vertical Timeline Cards -->
+            <div class="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-[#B55B3A]/30">
+                @if (ActiveDay != null)
+                {
+                    @foreach (var item in ActiveDay.Items)
+                    {
+                        <div class="relative group">
+                            <!-- Timeline Dot with Time Label -->
+                            <div class="absolute -left-6 top-3 flex items-center gap-2">
+                                <div class="w-3 h-3 rounded-full bg-[#B55B3A] border-2 border-white shadow-sm ring-2 ring-[#B55B3A]/20"></div>
+                            </div>
+
+                            <div class="text-xs font-mono font-bold text-stone-800 mb-1.5 pl-1">
+                                @item.TimeRange.Split('–')[0].Trim()
+                            </div>
+
+                            <!-- Timeline Card -->
+                            <div class="bg-white rounded-2xl border border-stone-200 p-4 shadow-sm space-y-2 hover:border-[#B55B3A]/50 transition-colors">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-semibold text-[#B55B3A] bg-[#FDF2EC] px-2.5 py-0.5 rounded-full">
+                                        @item.TimeRange
+                                    </span>
+
+                                    <div class="w-6 h-6 rounded-full bg-[#FDF2EC] text-[#B55B3A] flex items-center justify-center">
+                                        @if (item.IconType == "mountain")
+                                        {
+                                            <svg class="w-3.5 h-3.5 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909" />
+                                            </svg>
+                                        }
+                                        else if (item.IconType == "food")
+                                        {
+                                            <svg class="w-3.5 h-3.5 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
+                                            </svg>
+                                        }
+                                        else
+                                        {
+                                            <svg class="w-3.5 h-3.5 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                                            </svg>
+                                        }
+                                    </div>
+                                </div>
+
+                                <h4 class="text-sm font-bold text-stone-900">
+                                    @item.Title
+                                </h4>
+
+                                <p class="text-xs text-stone-600 leading-relaxed">
+                                    @item.Description
+                                </p>
+
+                                <div class="flex items-center gap-4 text-[11px] text-stone-400 font-medium pt-1">
+                                    <span>👥 @item.Guests</span>
+                                    <span>⏱ @item.Duration</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <!-- Bottom Tour Tip Callout Card -->
+            <div class="bg-white rounded-2xl border border-stone-200 p-4 flex items-start gap-3 shadow-sm">
+                <div class="w-8 h-8 rounded-full bg-[#FDF2EC] text-[#B55B3A] flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" x2="12" y1="16" y2="12" />
+                        <line x1="12" x2="12.01" y1="8" y2="8" />
+                    </svg>
+                </div>
+                <div class="space-y-0.5">
+                    <h4 class="text-xs font-bold text-stone-900">A good start, without the rush.</h4>
+                    <p class="text-xs text-stone-600 leading-relaxed">
+                        Arrive 15 minutes early at Ubud Palace. Look for your guide holding a TourPortal sign. Bring comfortable shoes and your pass.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private GuestBooking Booking => BookingState.CurrentBooking;
+    private Tour CurrentTour = new();
+    private int _selectedDayNumber = 1;
+
+    private TourItineraryDay? ActiveDay => CurrentTour.ItineraryDays.FirstOrDefault(d => d.DayNumber == _selectedDayNumber)
+                                           ?? CurrentTour.ItineraryDays.FirstOrDefault();
+
+    protected override void OnInitialized()
+    {
+        CurrentTour = TourService.GetTourById(Booking.TourId)
+                      ?? TourService.GetAllTours().FirstOrDefault()
+                      ?? new Tour();
+
+        if (CurrentTour.ItineraryDays.Any())
+        {
+            _selectedDayNumber = CurrentTour.ItineraryDays.First().DayNumber;
+        }
+    }
+
+    private void SelectDay(int dayNumber)
+    {
+        _selectedDayNumber = dayNumber;
+        StateHasChanged();
+    }
+
+    private async Task PrintPass()
+    {
+        await JSRuntime.InvokeVoidAsync("window.print");
+    }
+}
