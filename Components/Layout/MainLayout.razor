@@ -1,0 +1,195 @@
+@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<div class="min-h-screen flex flex-col bg-[#FAF8F5] text-stone-900 font-sans antialiased selection:bg-[#FDF2EC] selection:text-[#B55B3A]">
+    <!-- Top Global Navigation Bar -->
+    <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-stone-200/80 transition-shadow">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+            <!-- Brand Logo -->
+            <a href="/" class="flex items-center gap-2.5 group cursor-pointer text-decoration-none">
+                <div class="w-10 h-10 rounded-xl bg-[#B55B3A] flex items-center justify-center text-white shadow-sm shadow-[#B55B3A]/20 group-hover:scale-105 transition-transform duration-200">
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                    </svg>
+                </div>
+                <span class="text-xl font-bold tracking-tight text-stone-900 group-hover:text-[#B55B3A] transition-colors">TourPortal</span>
+            </a>
+
+            <!-- Search Bar Field (Interactive Global Search) -->
+            <div class="flex-1 max-w-md hidden md:block">
+                <div class="relative flex items-center">
+                    <span class="absolute left-3.5 text-stone-400">
+                        <svg class="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </span>
+                    <input type="text"
+                           @bind="_headerSearchQuery"
+                           @bind:event="oninput"
+                           @onkeydown="HandleSearchKeyDown"
+                           placeholder="Find your next destination"
+                           class="w-full bg-[#FAF8F5] border border-stone-200 rounded-full pl-10 pr-9 py-2 text-xs sm:text-sm text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#B55B3A]/20 focus:border-[#B55B3A] transition-all shadow-inner" />
+                    @if (!string.IsNullOrWhiteSpace(_headerSearchQuery))
+                    {
+                        <button type="button"
+                                @onclick="ExecuteHeaderSearch"
+                                class="absolute right-3 text-[#B55B3A] hover:text-[#96472A] text-xs font-bold">
+                            Go
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Right Actions with Active Route Highlighting -->
+            <div class="flex items-center gap-6 text-sm font-medium">
+                <!-- Explore Link (Highlighted when on / or /tours) -->
+                <a href="/"
+                   class="transition-colors pb-1 border-b-2 @(IsExploreActive ? "text-[#B55B3A] font-bold border-[#B55B3A]" : "text-stone-700 hover:text-[#B55B3A] border-transparent")">
+                    Explore
+                </a>
+
+                <!-- My Booking Pass Link (Highlighted when on /booking/pass) -->
+                <a href="/booking/pass"
+                   class="flex items-center gap-1.5 transition-colors pb-1 border-b-2 @(IsBookingPassActive ? "text-[#B55B3A] font-bold border-[#B55B3A]" : "text-stone-700 hover:text-[#B55B3A] border-transparent")">
+                    <svg class="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
+                    </svg>
+                    <span>My Booking Pass</span>
+                </a>
+
+                <!-- Currency Selector (Interactive Dropdown) -->
+                <div class="relative">
+                    <button type="button"
+                            @onclick="ToggleCurrencyDropdown"
+                            class="flex items-center gap-1.5 text-stone-700 hover:text-stone-900 cursor-pointer select-none bg-stone-50 hover:bg-stone-100 px-2.5 py-1.5 rounded-lg border border-stone-200 transition-colors">
+                        <svg class="w-4 h-4 stroke-current fill-none text-stone-500" viewBox="0 0 24 24" stroke-width="1.8">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M2 12h20"/>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                        </svg>
+                        <span class="text-xs font-semibold">@_currentCurrency</span>
+                        <svg class="w-3 h-3 text-stone-400 transform transition-transform @(_currencyDropdownOpen ? "rotate-180" : "")" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    @if (_currencyDropdownOpen)
+                    {
+                        <div class="absolute right-0 mt-2 w-36 bg-white rounded-xl shadow-xl border border-stone-200 py-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                            @foreach (var curr in _currencies)
+                            {
+                                <button type="button"
+                                        @onclick="() => SelectCurrency(curr.Code)"
+                                        class="w-full text-left px-3.5 py-1.5 text-xs flex items-center justify-between hover:bg-stone-50 transition-colors @(_currentCurrency == curr.Code ? "text-[#B55B3A] font-bold bg-[#FDF2EC]" : "text-stone-700")">
+                                    <span>@curr.Code (@curr.Symbol)</span>
+                                    @if (_currentCurrency == curr.Code)
+                                    {
+                                        <svg class="w-3.5 h-3.5 text-[#B55B3A] stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                        </svg>
+                                    }
+                                </button>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1">
+        @Body
+    </main>
+
+    <!-- Global Footer -->
+    <footer class="bg-white border-t border-stone-200 mt-16 py-6 text-xs text-stone-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div>
+                © 2027 TourPortal. Go somewhere meaningful.
+            </div>
+
+            <div class="flex items-center gap-2 text-stone-600 font-medium">
+                <svg class="w-4 h-4 text-[#B55B3A] stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+                </svg>
+                <span>No account needed. Just a little curiosity.</span>
+            </div>
+
+            <div class="flex items-center gap-6 text-stone-500">
+                <a href="#" class="hover:text-stone-800 transition-colors">Need help?</a>
+                <a href="#" class="hover:text-stone-800 transition-colors">Terms &amp; privacy</a>
+            </div>
+        </div>
+    </footer>
+</div>
+
+@code {
+    private string _currentUri = string.Empty;
+    private string _headerSearchQuery = string.Empty;
+    private string _currentCurrency = "USD";
+    private bool _currencyDropdownOpen = false;
+
+    private readonly (string Code, string Symbol)[] _currencies = new[]
+    {
+        ("USD", "$"),
+        ("EUR", "€"),
+        ("GBP", "£"),
+        ("AUD", "A$")
+    };
+
+    private bool IsBookingPassActive => _currentUri.Contains("/booking/pass", StringComparison.OrdinalIgnoreCase);
+    private bool IsExploreActive => !IsBookingPassActive;
+
+    protected override void OnInitialized()
+    {
+        _currentUri = Navigation.Uri;
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        _currentUri = e.Location;
+        _currencyDropdownOpen = false;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void ToggleCurrencyDropdown()
+    {
+        _currencyDropdownOpen = !_currencyDropdownOpen;
+    }
+
+    private void SelectCurrency(string currency)
+    {
+        _currentCurrency = currency;
+        _currencyDropdownOpen = false;
+        StateHasChanged();
+    }
+
+    private void HandleSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            ExecuteHeaderSearch();
+        }
+    }
+
+    private void ExecuteHeaderSearch()
+    {
+        if (!string.IsNullOrWhiteSpace(_headerSearchQuery))
+        {
+            Navigation.NavigateTo($"/?search={Uri.EscapeDataString(_headerSearchQuery)}");
+        }
+        else
+        {
+            Navigation.NavigateTo("/");
+        }
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+}
