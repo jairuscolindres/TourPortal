@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-primary: #3E3430;
+    --color-accent: #B55B3A;
+    --color-bg: #FAF8F5;
+    --color-callout: #FAF4EE;
+  }
+
+  body {
+    background-color: #FAF8F5;
+    color: #292524;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, .font-serif {
+    font-family: 'Newsreader', 'Playfair Display', Georgia, serif;
+  }
+}
+
+/* Custom dashed ticket perforations */
+.ticket-perforation {
+  position: relative;
+  background-image: linear-gradient(to right, #d6d3d1 50%, rgba(255, 255, 255, 0) 0%);
+  background-position: bottom;
+  background-size: 14px 1.5px;
+  background-repeat: repeat-x;
+}
+
+@media print {
+  header, footer, .no-print {
+    display: none !important;
+  }
+  body {
+    background-color: white !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+}
