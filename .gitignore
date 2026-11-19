@@ -8,6 +8,8 @@
 *.userosscache
 *.suo
 *.userprefs
+appsettings.Development.json
+appsettings*.local.json
 
 ## Node / NPM
 node_modules/

@@ -1,5 +1,5 @@
-@url = https://ytiqqznqvqtjqfpyojhv.supabase.co
-@key = sb_publishable_pBWqF7f77bKPNDYnWGIW0Q_ronWYCtZ
+@url = https://your-project.supabase.co
+@key = your-supabase-publishable-key
 
 ### Test 1: Fetch all tours
 GET {{url}}/rest/v1/tours?select=*
