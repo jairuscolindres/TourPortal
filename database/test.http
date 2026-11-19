@@ -1,0 +1,10 @@
+@url = https://ytiqqznqvqtjqfpyojhv.supabase.co
+@key = sb_publishable_pBWqF7f77bKPNDYnWGIW0Q_ronWYCtZ
+
+### Test 1: Fetch all tours
+GET {{url}}/rest/v1/tours?select=*
+apikey: {{key}}
+
+### Test 2: Fetch all active bookings
+GET {{url}}/rest/v1/bookings?deleted_at=is.null&select=*
+apikey: {{key}}
