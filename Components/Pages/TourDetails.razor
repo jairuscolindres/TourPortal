@@ -448,20 +448,20 @@ else
         "10–12 Jul 2027"
     };
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        LoadTour();
+        await LoadTourAsync();
     }
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
-        LoadTour();
+        await LoadTourAsync();
     }
 
-    private void LoadTour()
+    private async Task LoadTourAsync()
     {
         var targetId = string.IsNullOrWhiteSpace(Id) ? "tour-ubud-naturally" : Id;
-        Tour = TourService.GetTourById(targetId) ?? TourService.GetAllTours().FirstOrDefault();
+        Tour = await TourService.GetTourByIdAsync(targetId) ?? (await TourService.GetAllToursAsync()).FirstOrDefault();
 
         if (Tour != null)
         {
@@ -519,28 +519,34 @@ else
 
     private async Task HandleConfirmBooking()
     {
-        if (Tour == null) return;
+        if (Tour == null || _isSubmitting) return;
 
         _isSubmitting = true;
         StateHasChanged();
 
-        if (string.IsNullOrWhiteSpace(_bookingModel.LeadTravelerName))
-            _bookingModel.LeadTravelerName = "Alex Morgan";
-        if (string.IsNullOrWhiteSpace(_bookingModel.Email))
-            _bookingModel.Email = "alex.morgan@example.com";
-        if (string.IsNullOrWhiteSpace(_bookingModel.Phone))
-            _bookingModel.Phone = "+1 (415) 555-0138";
+        try
+        {
+            if (string.IsNullOrWhiteSpace(_bookingModel.LeadTravelerName))
+                _bookingModel.LeadTravelerName = "Alex Morgan";
+            if (string.IsNullOrWhiteSpace(_bookingModel.Email))
+                _bookingModel.Email = "alex.morgan@example.com";
+            if (string.IsNullOrWhiteSpace(_bookingModel.Phone))
+                _bookingModel.Phone = "+1 (415) 555-0138";
 
-        _bookingModel.TourId = Tour.Id;
-        _bookingModel.TourTitle = Tour.Title;
-        _bookingModel.TourImageUrl = Tour.ImageUrl;
-        _bookingModel.PricePerPerson = Tour.Price;
-        _bookingModel.TotalPaid = Tour.Price * _bookingModel.GuestCount;
+            _bookingModel.TourId = Tour.Id;
+            _bookingModel.TourTitle = Tour.Title;
+            _bookingModel.TourImageUrl = Tour.ImageUrl;
+            _bookingModel.PricePerPerson = Tour.Price;
+            _bookingModel.TotalPaid = Tour.Price * _bookingModel.GuestCount;
 
-        await Task.Delay(200);
-
-        // Save into scoped in-memory state service and navigate to /booking/pass
-        BookingState.CreateBooking(_bookingModel);
-        Navigation.NavigateTo("/booking/pass");
+            await BookingState.CreateBookingAsync(_bookingModel);
+            Navigation.NavigateTo("/booking/pass");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating booking: {ex.Message}");
+            _isSubmitting = false;
+            StateHasChanged();
+        }
     }
 }

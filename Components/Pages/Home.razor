@@ -575,6 +575,14 @@
         "3–5 Jul 2027"
     };
 
+    private List<Tour> _loadedTours = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var tours = await TourService.GetAllToursAsync();
+        _loadedTours = tours.ToList();
+    }
+
     protected override void OnParametersSet()
     {
         if (!string.IsNullOrWhiteSpace(SearchQuery))
@@ -689,7 +697,7 @@
 
     private IEnumerable<Tour> GetFilteredTours()
     {
-        var tours = TourService.GetAllTours().AsEnumerable();
+        var tours = (_loadedTours.Count > 0 ? _loadedTours : TourService.GetAllTours()).AsEnumerable();
 
         if (!string.IsNullOrWhiteSpace(_selectedCategory))
         {

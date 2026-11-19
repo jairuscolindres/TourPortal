@@ -1,13 +1,17 @@
 namespace TourPortal.Services;
 
 using TourPortal.Models;
+using Supabase.Postgrest;
+using static Supabase.Postgrest.Constants;
 
 public class TourDataService : ITourDataService
 {
+    private readonly Supabase.Client? _db;
     private readonly List<Tour> _tours;
 
-    public TourDataService()
+    public TourDataService(Supabase.Client? db = null)
     {
+        _db = db;
         _tours = new List<Tour>
         {
             new Tour
@@ -406,9 +410,94 @@ public class TourDataService : ITourDataService
     public Tour? GetTourById(string id) =>
         _tours.FirstOrDefault(t => string.Equals(t.Id, id, StringComparison.OrdinalIgnoreCase));
 
-    public Task<IReadOnlyList<Tour>> GetAllToursAsync() =>
-        Task.FromResult<IReadOnlyList<Tour>>(_tours.AsReadOnly());
+    public async Task<IReadOnlyList<Tour>> GetAllToursAsync()
+    {
+        if (_db != null)
+        {
+            try
+            {
+                var response = await _db.From<TourDbModel>()
+                    .Where(t => t.DeletedAt == null)
+                    .Order(t => t.Id, Ordering.Ascending)
+                    .Get();
 
-    public Task<Tour?> GetTourByIdAsync(string id) =>
-        Task.FromResult(_tours.FirstOrDefault(t => string.Equals(t.Id, id, StringComparison.OrdinalIgnoreCase)));
+                if (response.Models.Any())
+                {
+                    var result = new List<Tour>();
+                    foreach (var m in response.Models)
+                    {
+                        var existing = _tours.FirstOrDefault(t => string.Equals(t.Id, m.Slug, StringComparison.OrdinalIgnoreCase));
+                        if (existing != null)
+                        {
+                            result.Add(new Tour
+                            {
+                                Id = m.Slug,
+                                Title = m.Title,
+                                Location = m.Location,
+                                Country = m.Country,
+                                Category = m.Category,
+                                Price = m.Price,
+                                Rating = m.Rating,
+                                ReviewCount = m.ReviewCount,
+                                Duration = m.Duration,
+                                ImageUrl = m.ImageUrl,
+                                CoverCaption = existing.CoverCaption,
+                                GalleryImages = existing.GalleryImages,
+                                Description = m.Description,
+                                SubCategory = existing.SubCategory,
+                                Collection = existing.Collection,
+                                GroupSize = $"Up to {m.GroupSize} travelers",
+                                GuideInfo = existing.GuideInfo,
+                                LeaderInfo = existing.LeaderInfo,
+                                AvailableDates = existing.AvailableDates,
+                                Inclusions = existing.Inclusions,
+                                ItineraryDays = existing.ItineraryDays
+                            });
+                        }
+                        else
+                        {
+                            // Newly inserted tour from Supabase SQL editor
+                            result.Add(new Tour
+                            {
+                                Id = m.Slug,
+                                Title = m.Title,
+                                Location = m.Location,
+                                Country = m.Country,
+                                Category = m.Category,
+                                Price = m.Price,
+                                Rating = m.Rating > 0 ? m.Rating : 5.0,
+                                ReviewCount = m.ReviewCount > 0 ? m.ReviewCount : 1,
+                                Duration = m.Duration,
+                                ImageUrl = m.ImageUrl,
+                                CoverCaption = m.Location,
+                                GalleryImages = new List<string> { m.ImageUrl },
+                                Description = m.Description,
+                                SubCategory = $"{m.Category.ToUpper()} · LOCAL DISCOVERY",
+                                Collection = "NEW ADDITION",
+                                GroupSize = $"Up to {m.GroupSize} travelers",
+                                GuideInfo = "Licensed local guide",
+                                LeaderInfo = "Locally led",
+                                AvailableDates = "Daily departures",
+                                Inclusions = new List<string> { "Local guide", "All activity passes", "Refreshments" },
+                                ItineraryDays = new List<TourItineraryDay>()
+                            });
+                        }
+                    }
+                    return result.AsReadOnly();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[TourDataService] Supabase fetch error: {ex.Message}");
+            }
+        }
+        return _tours.AsReadOnly();
+    }
+
+    public async Task<Tour?> GetTourByIdAsync(string id)
+    {
+        var all = await GetAllToursAsync();
+        return all.FirstOrDefault(t => string.Equals(t.Id, id, StringComparison.OrdinalIgnoreCase))
+               ?? _tours.FirstOrDefault(t => string.Equals(t.Id, id, StringComparison.OrdinalIgnoreCase));
+    }
 }
